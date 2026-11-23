@@ -77,3 +77,9 @@ This journal records how ClaimIQ was planned, generated with AI assistance, chal
 **Request.** The candidate asked for the README to describe what ClaimIQ does, its benefits, scope and distinguishing features, with local setup instructions in a separate file.
 
 **Changes and verification.** The AI rewrote the README as a project overview, moved the existing setup and demonstration instructions to `LOCAL_SETUP.md`, retained the endpoint contract in `API_REFERENCE.md`, and updated the frontend documentation links. Benefits are described as design goals and prototype capabilities rather than measured outcomes or unverified competitive claims. No application code was changed for this documentation update.
+
+## 24 November 2026 — Architecture diagrams
+
+**Request.** The candidate requested supporting use-case, sequence and entity-relationship documentation to explain the system's software-engineering design.
+
+**Work and verification.** The AI compared the diagram content with the implemented entities, controllers and services, then added `ARCHITECTURE.md` with a use-case overview, lifecycle diagram, claim-submission sequence, entity relationships and design trade-offs. The four Mermaid blocks were parsed successfully with Mermaid's parser; this validates syntax, not every viewer's rendering. The README links to the new document. No application behavior was changed.

@@ -91,6 +91,7 @@ REST handles the current user-facing operations. Kafka is a future design option
 
 ## Project documents
 
+- [Use cases and architecture diagrams](ARCHITECTURE.md) — use cases, claim lifecycle, sequence diagram and entity relationships.
 - [Local setup and demonstration](LOCAL_SETUP.md) — prerequisites, run commands, demo accounts and a walkthrough.
 - [API reference](API_REFERENCE.md) — endpoints, request details and a sample call.
 - [AI working journal](AI_WORKING_JOURNAL.md) — requests, decisions, challenges and verification during development.
