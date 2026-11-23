@@ -71,3 +71,9 @@ This journal records how ClaimIQ was planned, generated with AI assistance, chal
 **Final walkthrough.** In a separate temporary in-memory database, the AI used the interface to submit a fictional claim, assign it, record evidence verification, request more information, respond as the claimant and record an officer approval. The activity trail and dashboard reflected the final status. The temporary servers were stopped after the check. The app was not publicly hosted and no email was sent.
 
 **Review boundary.** The candidate tried the local interface and raised the different-incident-date question recorded above. A complete independent review of every generated line, additional personal challenges or overrides, and the actual total development time are not established by this journal.
+
+## 24 November 2026 — Project documentation
+
+**Request.** The candidate asked for the README to describe what ClaimIQ does, its benefits, scope and distinguishing features, with local setup instructions in a separate file.
+
+**Changes and verification.** The AI rewrote the README as a project overview, moved the existing setup and demonstration instructions to `LOCAL_SETUP.md`, retained the endpoint contract in `API_REFERENCE.md`, and updated the frontend documentation links. Benefits are described as design goals and prototype capabilities rather than measured outcomes or unverified competitive claims. No application code was changed for this documentation update.
