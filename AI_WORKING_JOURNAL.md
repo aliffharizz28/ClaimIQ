@@ -1,70 +1,73 @@
 # AI working journal
 
-Record actual work and distinguish AI proposals from decisions reviewed by the developer. Future entries should include the request, proposal, accepted or challenged decisions, reasoning, and verification.
+This journal records how ClaimIQ was planned, generated with AI assistance, challenged and verified. It distinguishes requests made by the candidate from implementation choices made by the AI assistant. The system is a local prototype, and its automated findings support human review rather than determining fraud or claim outcomes.
 
-## 2026-11-23 — Planning context
+## 23 November 2026 — Scope and architecture
 
-- The user selected Java/Spring Boot, a modular monolith, motor claims, deterministic evidence-gap and potential-duplicate checks, an optional LLM, a backend-first approach and Kafka as design rather than required implementation. The prior conversation proposed H2, seeded users, an activity trail and an initial provisional exposure based on the claim amount.
-- The plan states that automated findings support an officer; they do not establish fraud or decide a claim. The original brief was not attached to this session, so its requirements were not independently verified.
+**Request and decisions.** The candidate chose a backend-first motor-claims MVP using Java and Spring Boot, deterministic rules with an optional future LLM, duplicate and evidence-gap checks, and a minimal interface. The agreed direction was a modular monolith with file-backed H2, seeded demonstration users, and an Angular frontend if time permitted. Kafka was to be discussed as a future event-driven option rather than implemented in the MVP. The candidate asked for development to proceed in stages and for important decisions to be explained.
 
-## 2026-11-23 — Stage 1 implementation
+**AI proposal and reasoning.** The AI proposed six core entities, a claims activity history, role and ownership checks, and a provisional exposure initially equal to the submitted amount. The architecture favored a locally runnable system and a complete motor-claims workflow over a broader but incomplete platform. Priority would be used for work management, not as a fraud probability.
 
-- Request: inspect the workspace, implement the Stage 1 foundation, document it, and run available verification without starting claims APIs or publishing.
-- AI implementation choices: separate package boundaries, JPA entities with foreign keys and optimistic locking, file-backed H2, BCrypt demo users under an opt-in profile, deny-by-default HTTP security and a reusable ownership policy. Demo users are local examples, not production identity management.
-- Reasoning: these choices keep startup and the model small while making authorization and concurrency concerns visible. The developer has not yet reviewed or accepted the generated implementation; no review, challenge or commit is claimed.
-- Verification: `mvn test` was attempted but could not start because Maven was not found. Java was also absent from PATH and the common installation locations checked. The POM was parsed successfully as well-formed XML, which does not establish that dependencies resolve or the code compiles. Tests, application startup, authentication and database persistence remain unverified at runtime. No commits were created; the workspace was not a Git repository.
+**Verification.** The implementation environment initially had neither Java nor Maven on PATH. The AI verified that the Maven project file was well-formed XML, but could not compile or run the application at that point. The original assessment brief had not yet been located in the working session.
 
-## 2026-11-24 — Tooling and Stage 1 verification
+## 23–24 November 2026 — Foundation and local setup
 
-- The user installed Java and Maven and asked for the setup to be checked and any remaining work handled.
-- The running Codex process initially had an outdated PATH. Reloading the Windows machine and user environment made Microsoft OpenJDK 21.0.13.1 and Maven 3.10.2 available; Maven reported Java 21.
-- `mvn test` succeeded: four tests passed, with no failures or errors. They cover demo users, access policy, default route denial and a JPA claim persistence case using in-memory H2.
-- Started the application with the demo profile. It connected to file-backed H2 and started on localhost port 8080. An unauthenticated request to the unopened claims route returned 401; an authenticated demo claimant received 403, as expected for the deny-by-default configuration. The application was stopped after the check.
-- No claims API or triage engine was implemented, and no commits were made. Maven is currently installed under Downloads, which should be retained or moved and its PATH updated before that directory is cleaned.
+**Request.** The candidate requested the Spring Boot project, domain model, H2 configuration, security foundation and AI journal. After the missing tools were identified, the candidate installed Java 21 and Maven and asked the AI to recheck the setup.
 
-## 2026-11-24 — Stage 2 claims workflow
+**AI implementation.** The foundation used JPA entities, file-backed H2, BCrypt password hashes, opt-in fictional demo accounts, deny-by-default route security and optimistic claim versions. The AI chose separate identity, claim, triage and security packages in a single application. The development setup was local only.
 
-- Request: move on to the next stage after Stage 1 verification.
-- Implemented authenticated REST claim submission and retrieval, evidence metadata, officer assignment, information requests and responses, officer decisions, activity history, an officer workload/exposure summary and a current-user endpoint. Added request validation, role and ownership checks at the service boundary, CSRF token access, and version checks backed by JPA optimistic locking.
-- Decisions: assignment moves a submitted claim into review; only a claim under review can receive an information request or decision; a claimant response returns it to review. A decision requires an officer note. Provisional exposure remains the submitted amount, and the summary excludes final claims. A version is required on each update to expose stale edits. These are implementation choices for the MVP, pending developer review.
-- Verification: `mvn -B test` passed all six tests, including a multi-step workflow, cross-user denial, role restrictions, invalid amount, CSRF absence, stale version and invalid transitions. Tests use in-memory H2. A live local smoke test with a separate in-memory database retrieved a CSRF token and session cookie, then submitted a fictional claim successfully. The server was stopped afterward. Simultaneous racing transactions and a file-backed Stage 2 restart were not separately tested.
-- Stage 3 triage rules, frontend and deployment remain out of scope. No commits were created. The original assessment brief is still unavailable in this workspace.
+**Verification.** The AI refreshed the terminal environment and confirmed that Maven was using Java 21. The first four backend tests passed. The app started with the demo profile and connected to file-backed H2; an unauthenticated request to an unopened route returned 401 and an authenticated request returned 403. The local server was stopped after the check.
 
-## 2026-11-24 — Stage 3 deterministic triage
+## 24 November 2026 — Claims workflow
 
-- Request: proceed directly to Stage 3 without waiting for a user review.
-- Implemented synchronous triage at submission and after additional information, stored versioned result snapshots, owner/officer retrieval and officer-initiated refresh for older claims. Rules identify missing damage photos or repair quotations and possible duplicates with the same claimant, incident date and normalized registration. Duplicate findings receive HIGH priority, evidence gaps MEDIUM, and no findings NORMAL. No automated claim decision or LLM was added.
-- Decision: results are snapshots rather than a background event system. Existing results are not automatically refreshed when a later claim is submitted; concurrent submissions can miss each other. Officers can rerun analysis, but this is not a guarantee of duplicate detection. This trade-off keeps the assessment scope small and needs consideration if the system is expanded.
-- Verification: `mvn -B test` succeeded with seven tests and no failures. The new integration test covers gaps, a duplicate with case/spacing differences, a different claimant, normal priority, access restrictions and reanalysis following new evidence. Tests use in-memory H2; no simultaneous-submission or file-backed Stage 3 restart test was performed. No user code review or commit is claimed.
+**Request.** The candidate asked to proceed to the next stage.
 
-## 2026-11-24 — Stage 4 Angular interface
+**AI implementation and reasoning.** The AI added claim submission and retrieval, evidence metadata, officer assignment, information requests and responses, decisions, activity records, a workload/exposure summary, validation and access control. Assignment moves a submitted claim into review; a claimant response returns a claim awaiting information to review. Updates include a version so stale edits can be rejected. The submitted amount is labeled as provisional exposure rather than an approved payout.
 
-- Request: continue after Stage 3. Built a minimal local Angular interface for the existing claims API: demo sign-in, claimant submission and tracking, officer queue and summary, triage findings, assignment, information requests and responses, and decisions. Evidence is entered as references, not uploaded files. The frontend uses the backend session and CSRF token; the development proxy keeps API requests on the same browser origin.
-- Decision: kept the existing backend authorization and workflow as the authority, held demo credentials in memory, and avoided publishing or adding an LLM. The UI only assigns an officer to themselves; the backend also supports assigning a different officer by ID. The developer has not reviewed the implementation.
-- Verification: `npm run build` succeeded and `npm test -- --watch=false` passed one test. Using a temporary in-memory backend, browser testing verified claimant sign-in, fictional claim submission and evidence-gap findings, followed by officer sign-in, assignment and an information request. The claimant response and final decision were not re-tested in the browser; their backend paths were covered by the existing integration suite. Local servers were stopped after testing. No commits or deployment were made.
+**Verification.** At this stage, six backend tests passed, including a multi-step workflow, role and ownership restrictions, invalid input, CSRF, stale versions and invalid transitions. A separate local smoke test obtained a CSRF token and submitted a fictional claim. Simultaneous submissions were not tested at this stage; they were tested later.
 
-## 2026-11-24 — Recent vehicle claim review rule
+## 24 November 2026 — Deterministic triage and interface
 
-- Request: flag the user's example of two claims for the same vehicle on different nearby dates as a separate review concern.
-- Implemented a `RECENT_VEHICLE_CLAIM` finding for the same claimant and normalized registration with different incident dates 1–30 days apart, in either date order. This produces MEDIUM priority unless a higher-priority exact-date duplicate is also present. The explanation says separate incidents are possible. The 30-day window and same-claimant restriction are MVP choices; they are not evidence of fraud. The same-claimant restriction also avoids exposing another claimant's claim ID through the claimant-facing result.
-- Existing analyses remain snapshots; an officer can refresh each claim after restarting the backend. Bumped rule version to `motor-v2`.
-- Verification: `mvn -B test` passed all eight tests. The added integration test covers an eight-day example, exactly 30 days, 31 days, a different claimant, out-of-order dates and officer refresh; the existing exact-date duplicate test also passed. Testing used in-memory H2. No user data was modified and no commit was created.
+**Request.** The candidate asked to continue without waiting for a detailed stage review.
 
-## 2026-11-24 — Additional review ideas
+**AI implementation.** Triage was initially added for missing evidence and potential duplicates based on the same claimant, incident date and vehicle registration. Results were stored as versioned snapshots with explanations. The AI then built a minimal Angular interface for both roles, using the backend's authentication, authorization and CSRF protections. Evidence fields store references, not uploaded files. The AI did not add an LLM or deploy the application.
 
-- The user supplied potential duplicate, identity, timing, document and staff-side checks. Implemented one bounded rule supported by existing data: identical incident narratives of at least 40 characters after case and whitespace normalization, on claims for the same claimant within 30 incident-date days. It creates a MEDIUM-priority review prompt, except that it does not duplicate an existing exact-date same-vehicle finding for the same pair. The text explicitly says repetition does not establish duplication or fraud. The 30-day and 40-character thresholds are MVP design choices, not calibrated fraud thresholds.
-- Did not implement file hashes, cross-channel matching, device or identity linkage, payout comparisons, policy coverage, price benchmarks, merchant networks, staff-risk signals or other ideas: the current application does not collect the needed data, and the user did not provide validated rules or baselines. The same-claimant scope avoids exposing other users' claim IDs in claimant-visible findings. Exact text matching does not detect paraphrases.
-- Verification: `mvn -B test` passed nine tests. The added integration test covers case-insensitive repeated text, the 30-day boundary, different claimants, outside-window matches, short descriptions and changed wording; existing triage and workflow tests passed. Tests used in-memory H2; no user claims or live database were altered. The user has not reviewed this implementation; no commit was made.
+**Reasoning.** Rules were chosen because they are transparent and testable. A possible duplicate is a prompt for an officer to investigate; it is not an accusation or automatic decision. A locally runnable frontend gives the assessment reviewers a way to demonstrate the workflow.
 
-## 2026-11-24 — Review feedback: consistency, access, and queries
+**Verification.** Seven backend tests passed after the initial triage work. The frontend production build and one frontend test passed. A browser check with a temporary in-memory database covered claimant sign-in and submission, followed by officer assignment and an information request. A later final walkthrough extended this check through claimant response and decision.
 
-- The user shared a prioritized review. Implemented claimant-row pessimistic locking for submission, triage refresh, additional information and evidence review. These paths recompute results for the affected claimant's 30-day window in one transaction without recursive propagation; claim updates still use optimistic versions. Latest results continue to be selected by ID, which orders snapshots written under the claimant lock; switching to wall-clock time was not needed for this model.
-- Restricted decisions and evidence review to the assigned officer; added an auditable evidence verification/rejection endpoint and interface controls. Unauthorized access to another claimant's claim or triage now returns 404. Claimant triage responses contain evidence gaps and an evidence-only priority; other findings and overall priority remain officer-only. Registration normalization now removes non-ASCII-alphanumeric characters and uses an indexed column; a startup backfill populates the new column for existing data. Validation uses a configurable Clock bean fixed to Asia/Kuala_Lumpur.
-- Added paginated claim lists and UI navigation, and database grouping for dashboard counts/exposure. Kept narrative comparisons and one-hop reconciliation within the bounded per-claimant date window; these still do work proportional to matching window size, and list views still fetch evidence and activity per claim. These changes improve the prototype but do not establish production scalability. Finding disposition/dismissal was not implemented.
-- Verification: `mvn -B test` passed 13 tests, including simultaneous submissions with findings on both claims, unauthorized officer actions, evidence rejection, claimant visibility, pagination, dashboard totals and a temporary file-backed H2 restart from a schema without the normalized column. `npm run build` and `npm test -- --watch=false` passed (one frontend test). The new interface controls were not browser-tested in this turn. No user database was changed during tests and no commit or deployment was made. The user must restart the backend to load the changes; the local schema will be updated/backfilled at startup.
+## 24 November 2026 — Candidate question about different incident dates
 
-## 2026-11-24 — Assessment instructions and final walkthrough
+**Challenge.** While using the UI, the candidate observed that two claims for the same vehicle, dated eight days apart, did not produce a duplicate finding and asked why. The AI explained that the original rule required the same incident date. The candidate then requested logic for this scenario.
 
-- The user asked to finish the remaining work and explain submission. Read the recruiter email and original assessment brief from the connected mailbox. The brief asks for a Git repository with meaningful history, a locally runnable app and an AI working journal; it permits a scoped prototype and prohibits public hosting and proprietary branding. The recruiter email requests submission by 24 November 2026, without a time or a specific delivery mechanism in the email examined.
-- The project had been developed before Git was initialized. Initialized a local repository and created a single honest initial snapshot commit of the existing MVP; earlier stages were not reconstructed as historical commits. Added a runnable demonstration walkthrough and clarified scope. The journal records prompts and AI activity; the candidate's personal review, challenges, overrides, development time and final sign-off must be supplied honestly by the candidate rather than invented.
-- Used separate localhost ports and a temporary in-memory H2 database for an end-to-end browser check: claimant submitted a fictional claim; officer assigned it and recorded evidence verification; officer requested additional information; claimant responded with a quotation reference; officer approved with a note. The activity trail and dashboard reflected the final status. The temporary test servers were stopped afterward. No email was sent and the application was not hosted publicly.
+**Change and reasoning.** The AI added a separate recent-vehicle-claim finding for the same claimant and normalized registration when incident dates differ by 1–30 days. It receives medium priority unless a higher-priority exact-date duplicate is present. The finding states that separate incidents are possible. The 30-day window is a simple MVP choice, not a validated fraud threshold.
+
+**Verification.** Eight backend tests passed at that stage. The added test covered an eight-day example, the 30-day boundary, 31 days, a different claimant, dates entered out of order and officer refresh.
+
+## 24 November 2026 — Additional review ideas
+
+**Request.** The candidate shared possible checks involving duplicate claims, identity, timing, evidence, networks and staff activity.
+
+**AI proposal and scope decision.** The AI implemented an identical-narrative review prompt using data already collected: the same claimant, incident dates within 30 days, and at least 40 normalized characters. The finding does not establish fraud or a duplicate. The exact-date/same-vehicle duplicate rule takes precedence for the same pair. File hashing, device and payout linkage, policy coverage, price benchmarks and staff-risk rules were not implemented because the prototype lacks the necessary data and validated baselines. The 30-day and 40-character values are MVP assumptions.
+
+**Verification.** Nine backend tests passed, including checks for repeated text, case differences, the 30-day boundary, different claimants, short descriptions and changed wording. These tests used in-memory H2.
+
+## 24 November 2026 — External feedback and backend improvements
+
+**Challenge and request.** The candidate shared prioritized feedback highlighting stale triage results and concurrent submissions, authorization and workflow gaps, query efficiency, pagination and evidence review. The feedback also proposed finding dismissal as a stretch feature.
+
+**Changes made.** The AI added a claimant-row pessimistic lock and one-hop reanalysis for affected claims in the 30-day window, while keeping optimistic claim versions for updates. It restricted decisions and evidence review to the assigned officer, returned 404 for access to another claimant's claim, and limited claimants to evidence-gap findings and an evidence-only priority. It added an auditable evidence-review endpoint and interface controls, pagination, database-grouped dashboard totals, a normalized registration index with backfill for existing data, and a Kuala Lumpur clock for incident-date validation.
+
+**Trade-offs.** Latest triage results are selected by database ID; the per-claimant lock orders the supported triage-writing operations. One-hop synchronous reconciliation remains proportional to the number of claims in the affected window and is not a production-scale event system. The suggested finding-dismissal feature was not implemented. More advanced cross-account and file checks remained outside the available data and MVP scope.
+
+**Verification.** The final backend suite passed 13 tests, including simultaneous submissions, privacy and authorization checks, evidence rejection, pagination, dashboard exposure, and a temporary file-backed H2 restart with normalization backfill. The frontend build and its test passed. The tests do not prove production readiness or cover every possible concurrent execution.
+
+## 24 November 2026 — Assessment brief and final verification
+
+**Request.** The candidate asked to complete the remaining preparation and explain how to submit the assessment. The AI located the recruiter email and original brief. The brief calls for a Git repository with meaningful history, a locally runnable application and an AI working journal; it explicitly allows a scoped solution and prohibits public hosting and proprietary branding.
+
+**Repository history.** The project had been developed before Git was initialized. A local repository was initialized and the existing MVP was recorded as an initial snapshot; subsequent documentation and journal changes were committed afterward. Earlier work was not reconstructed or backdated as separate commits. This means the Git history does not fully show the earlier development stages; this journal records those stages instead.
+
+**Final walkthrough.** In a separate temporary in-memory database, the AI used the interface to submit a fictional claim, assign it, record evidence verification, request more information, respond as the claimant and record an officer approval. The activity trail and dashboard reflected the final status. The temporary servers were stopped after the check. The app was not publicly hosted and no email was sent.
+
+**Review boundary.** The candidate tried the local interface and raised the different-incident-date question recorded above. A complete independent review of every generated line, additional personal challenges or overrides, and the actual total development time are not established by this journal.
